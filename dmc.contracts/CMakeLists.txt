@@ -25,6 +25,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${WASM_ROOT}/lib/cmake)
 include(EosioWasmToolchain)
 
+add_subdirectory(eosio.token)
 add_subdirectory(eosio.bios)
 add_subdirectory(eosio.system)
 add_subdirectory(hello)

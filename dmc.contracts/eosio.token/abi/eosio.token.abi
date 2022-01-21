@@ -1,0 +1,504 @@
+{
+   "version": "eosio::abi/1.0",
+   "types": [{
+      "new_type_name": "account_name",
+      "type": "name"
+   }],
+  "structs": [{
+      "name": "extended_symbol",
+      "base": "",
+      "fields": [
+        {"name":"sym",      "type":"symbol"},
+        {"name":"contract", "type":"account_name"}
+      ]
+    },
+    {
+      "name": "extended_asset",
+      "base": "",
+      "fields": [
+        {"name":"quantity", "type":"asset"},
+        {"name":"contract", "type":"account_name"}
+      ]
+    },{
+      "name": "transfer",
+      "base": "",
+      "fields": [
+        {"name":"from", "type":"account_name"},
+        {"name":"to", "type":"account_name"},
+        {"name":"quantity", "type":"asset"},
+        {"name":"memo", "type":"string"}
+      ]
+    },{
+     "name": "create",
+     "base": "",
+     "fields": [
+        {"name":"issuer", "type":"account_name"},
+        {"name":"maximum_supply", "type":"asset"}
+     ]
+  },{
+     "name": "issue",
+     "base": "",
+     "fields": [
+        {"name":"to", "type":"account_name"},
+        {"name":"quantity", "type":"asset"},
+        {"name":"memo", "type":"string"}
+     ]
+  },{
+     "name": "retire",
+     "base": "",
+     "fields": [
+        {"name":"quantity", "type":"asset"},
+        {"name":"memo", "type":"string"}
+     ]
+  },{
+     "name": "close",
+     "base": "",
+     "fields": [
+        {"name":"owner", "type":"account_name"},
+        {"name":"symbol", "type":"symbol"}
+     ]
+  },{
+      "name": "extransfer",
+      "base": "",
+      "fields": [
+        {"name":"from", "type":"account_name"},
+        {"name":"to", "type":"account_name"},
+        {"name":"quantity", "type":"extended_asset"},
+        {"name":"memo", "type":"string"}
+      ]
+    },{
+     "name": "excreate",
+     "base": "",
+     "fields": [
+        {"name": "issuer", "type":"account_name"},
+        {"name": "maximum_supply", "type":"asset"},
+        {"name": "reserve_supply", "type": "asset"},
+        {"name": "expiration","type":"time_point_sec"}
+     ]
+  },{
+     "name": "exissue",
+     "base": "",
+     "fields": [
+        {"name":"to", "type":"account_name"},
+        {"name":"quantity", "type":"extended_asset"},
+        {"name":"memo", "type":"string"}
+     ]
+  },{
+     "name": "exretire",
+     "base": "",
+     "fields": [
+       {"name":"from", "type":"account_name"},
+        {"name":"quantity", "type":"extended_asset"},
+        {"name":"memo", "type":"string"}
+     ]
+  },{
+     "name": "exclose",
+     "base": "",
+     "fields": [
+        {"name":"owner", "type":"account_name"},
+        {"name":"symbol", "type":"extended_symbol"}
+     ]
+  },{
+     "name": "exdestroy",
+     "base": "",
+     "fields": [
+        {"name":"symbol", "type":"extended_symbol"}
+     ]
+  },{
+      "name": "account",
+      "base": "",
+      "fields": [
+        {"name":"primary", "type":"uint64"},
+        {"name":"balance", "type":"extended_asset"}
+      ]
+    },{
+      "name": "lock_account",
+      "base": "account",
+      "fields": [
+        {"name":"lock_timestamp", "type":"time_point_sec"}
+      ]
+    },{
+      "name": "exchange",
+      "base": "",
+      "fields": [
+        {"name":"owner", "type":"account_name"},
+        {"name":"quantity", "type":"extended_asset"},
+        {"name":"to", "type":"extended_asset"},
+        {"name":"price", "type":"float64"},
+        {"name":"id", "type":"account_name"},
+        {"name":"memo", "type":"string"}
+      ]
+    },{
+      "name": "currency_stats",
+      "base": "",
+      "fields": [
+        {"name":"supply", "type":"asset"},
+        {"name":"max_supply", "type":"asset"},
+        {"name":"issuer", "type":"account_name"},
+        {"name":"reserve_supply", "type":"asset"}
+      ]
+    },{
+      "name": "exunlock",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"quantity","type":"extended_asset"},
+        {"name":"expiration","type":"time_point_sec"},
+        {"name":"memo","type":"string"}
+      ]
+    },{
+      "name": "exlocktrans",
+      "base": "",
+      "fields": [
+        {"name":"from","type":"account_name"},
+        {"name":"to","type":"account_name"},
+        {"name":"quantity","type":"extended_asset"},
+        {"name":"expiration","type":"time_point_sec"},
+        {"name":"expiration_to","type":"time_point_sec"},
+        {"name":"memo","type":"string"}
+      ]
+    },{
+      "name": "exlock",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"quantity","type":"extended_asset"},
+        {"name":"expiration","type":"time_point_sec"},
+        {"name":"memo","type":"string"}
+      ]
+    },{
+      "name": "receipt",
+      "base": "",
+      "fields": [
+        {"name":"in","type":"extended_asset"},
+        {"name":"out","type":"extended_asset"},
+        {"name":"fee","type":"extended_asset"}
+      ]
+    },{
+      "name": "addreserves",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"tokenx","type":"extended_asset"},
+        {"name":"tokeny","type":"extended_asset"}
+      ]
+    },{
+      "name": "outreserves",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"x","type":"extended_symbol"},
+        {"name":"y","type":"extended_symbol"},
+        {"name":"rate","type":"float64"}
+      ]
+    },{
+      "name": "outreceipt",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"x","type":"extended_asset"},
+        {"name":"y","type":"extended_asset"}
+      ]
+    },{
+      "name": "traderecord",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"oppo","type":"account_name"},
+        {"name":"from","type":"extended_asset"},
+        {"name":"to","type":"extended_asset"},
+        {"name":"fee","type":"extended_asset"},
+        {"name":"bid_id","type":"uint64"}
+      ]
+    },{
+      "name": "orderchange",
+      "base": "",
+      "fields": [
+        {"name":"bid_id","type":"uint64"},
+        {"name":"state","type":"uint8"}
+      ]
+    },{
+      "name": "bidrec",
+      "base": "",
+      "fields": [
+        {"name":"price","type":"uint64"},
+        {"name":"quantity","type":"extended_asset"},
+        {"name":"filled","type":"extended_asset"},
+        {"name":"bid_id","type":"uint64"}
+      ]
+    },{
+      "name": "pricerec",
+      "base": "",
+      "fields": [
+        {"name":"old_price","type":"uint64"},
+        {"name":"new_price","type":"uint64"}
+      ]
+    },{
+      "name": "uniswapsnap",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"quantity","type":"extended_asset"}
+      ]
+    },{
+      "name": "uniswap_market",
+      "base": "",
+      "fields": [
+        {"name":"primary", "type":"uint64"},
+        {"name":"tokenx","type":"extended_asset"},
+        {"name":"tokeny","type":"extended_asset"},
+        {"name":"total_weights","type":"float64"}
+      ]
+    },{
+      "name": "market_pool",
+      "base": "",
+      "fields": [
+        {"name":"owner", "type":"account_name"},
+        {"name":"weights","type":"float64"}
+      ]
+    },{
+      "name": "stake_record",
+      "base": "",
+      "fields": [
+        {"name":"primary", "type":"uint64"},
+        {"name":"owner", "type":"account_name"},
+        {"name":"matched","type":"extended_asset"},
+        {"name":"unmatched","type":"extended_asset"},
+        {"name":"price","type":"uint64"},
+        {"name":"created_at","type":"time_point_sec"},
+        {"name":"updated_at","type":"time_point_sec"}
+      ]
+    },{
+      "name": "stake",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"asset","type":"extended_asset"},
+        {"name":"price","type":"float64"},
+        {"name":"memo","type":"string"}
+      ]
+    },{
+      "name": "unstake",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"primary","type":"uint64"},
+        {"name":"memo","type":"string"}
+      ]
+    },{
+      "name": "getincentive",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"primary","type":"uint64"}
+      ]
+    }, {
+      "name": "pst_stats",
+      "base": "",
+      "fields": [
+        {"name":"owner","type":"account_name"},
+        {"name":"amount","type":"extended_asset"}
+      ]
+    },{
+      "name": "setabostats",
+      "base": "",
+      "fields": [
+        {"name":"stage","type": "uint64"},
+        {"name":"user_rate","type": "float64"},
+        {"name":"foundation_rate","type": "float64"},
+        {"name":"total_release","type": "extended_asset"},
+        {"name":"start_at","type": "time_point_sec"},
+        {"name":"end_at","type": "time_point_sec"}
+      ]
+    },{
+      "name": "abo_stats",
+      "base": "",
+      "fields": [
+        {"name":"stage","type": "uint64"},
+        {"name":"user_rate","type": "float64"},
+        {"name":"foundation_rate","type": "float64"},
+        {"name":"total_release","type": "extended_asset"},
+        {"name":"remaining_release","type": "extended_asset"},
+        {"name":"start_at","type": "time_point_sec"},
+        {"name":"end_at","type": "time_point_sec"},
+        {"name":"last_released_at","type": "time_point_sec"}
+      ]
+    },{
+      "name": "allocation",
+      "base": "",
+      "fields": [
+        {"name":"memo","type": "string"}
+      ]
+    }
+  ],
+  "actions": [{
+      "name": "transfer",
+      "type": "transfer",
+      "ricardian_contract": ""
+    },{
+      "name": "issue",
+      "type": "issue",
+      "ricardian_contract": ""
+    },{
+      "name": "retire",
+      "type": "retire",
+      "ricardian_contract": ""
+    }, {
+      "name": "create",
+      "type": "create",
+      "ricardian_contract": ""
+    }, {
+      "name": "close",
+      "type": "close",
+      "ricardian_contract": ""
+    }, {
+      "name": "extransfer",
+      "type": "extransfer",
+      "ricardian_contract": ""
+    },{
+      "name": "exissue",
+      "type": "exissue",
+      "ricardian_contract": ""
+    },{
+      "name": "exretire",
+      "type": "exretire",
+      "ricardian_contract": ""
+    }, {
+      "name": "excreate",
+      "type": "excreate",
+      "ricardian_contract": ""
+    }, {
+      "name": "exclose",
+      "type": "exclose",
+      "ricardian_contract": ""
+    }, {
+      "name": "exdestroy",
+      "type": "exdestroy",
+      "ricardian_contract": ""
+    }, {
+      "name": "exchange",
+      "type": "exchange",
+      "ricardian_contract": ""
+    }, {
+      "name": "exunlock",
+      "type": "exunlock",
+      "ricardian_contract": ""
+    }, {
+      "name": "exlock",
+      "type": "exlock",
+      "ricardian_contract": ""
+    },{
+      "name": "exlocktrans",
+      "type": "exlocktrans",
+      "ricardian_contract": ""
+    }, {
+      "name": "receipt",
+      "type": "receipt",
+      "ricardian_contract": ""
+    },{
+      "name": "addreserves",
+      "type": "addreserves",
+      "ricardian_contract": ""
+    },{
+      "name": "outreserves",
+      "type": "outreserves",
+      "ricardian_contract": ""
+    },{
+      "name": "orderchange",
+      "type": "orderchange",
+      "ricardian_contract": ""
+    },{
+      "name": "traderecord",
+      "type": "traderecord",
+      "ricardian_contract": ""
+    },{
+      "name": "outreceipt",
+      "type": "outreceipt",
+      "ricardian_contract": ""
+    },{
+      "name": "bidrec",
+      "type": "bidrec",
+      "ricardian_contract": ""
+    },{
+      "name": "pricerec",
+      "type": "pricerec",
+      "ricardian_contract": ""
+    },{
+      "name": "uniswapsnap",
+      "type": "uniswapsnap",
+      "ricardian_contract": ""
+    },{
+      "name": "stake",
+      "type": "stake",
+      "ricardian_contract": ""
+    },{
+      "name": "unstake",
+      "type": "unstake",
+      "ricardian_contract": ""
+    },{
+      "name": "getincentive",
+      "type": "getincentive",
+      "ricardian_contract": ""
+    },{
+      "name": "setabostats",
+      "type": "setabostats",
+      "ricardian_contract": ""
+    },{
+      "name": "allocation",
+      "type": "allocation",
+      "ricardian_contract": ""
+    }
+  ],
+  "tables": [{
+      "name": "accounts",
+      "type": "account",
+      "index_type": "i64",
+      "key_names" : ["primary"],
+      "key_types" : ["uint64"]
+    },{
+      "name": "stats",
+      "type": "currency_stats",
+      "index_type": "i64",
+      "key_names" : ["currency"],
+      "key_types" : ["uint64"]
+    },{
+      "name": "lockaccounts",
+      "type": "lock_account",
+      "index_type": "i64",
+      "key_names" : ["primary"],
+      "key_types" : ["uint64"]
+    },{
+      "name": "swapmarket",
+      "type": "uniswap_market",
+      "index_type": "i64",
+      "key_names" : ["primary"],
+      "key_types" : ["uint64"]
+    },{
+      "name": "swappool",
+      "type": "market_pool",
+      "index_type": "i64",
+      "key_names" : ["owner"],
+      "key_types" : ["uint64"]
+    },{
+      "name": "stakerec",
+      "type": "stake_record",
+      "index_type": "i64",
+      "key_names" : ["primary"],
+      "key_types" : ["uint64"]
+    },{
+      "name": "pststats",
+      "type": "pst_stats",
+      "index_type": "i64",
+      "key_names" : ["owner"],
+      "key_types" : ["uint64"]
+    },{
+      "name": "abostats",
+      "type": "abo_stats",
+      "index_type": "i64",
+      "key_names" : ["stage"],
+      "key_types" : ["uint64"]
+    }
+  ],
+  "ricardian_clauses": [],
+  "abi_extensions": []
+}
