@@ -1,3 +1,8 @@
+/**
+ *  @file
+ *  @copyright defined in fibos/LICENSE.txt
+ */
+
 #include <eosio.token/eosio.token.hpp>
 
 namespace eosio {
@@ -22,8 +27,8 @@ void token::addreserves(account_name owner, extended_asset x, extended_asset y)
         eosio_assert(owner == system_account, "this market only support datamall to addreserves");
 
     if (owner == system_account) {
-        add_stats(owner, x);
-        add_stats(owner, y);
+        add_stats(x);
+        add_stats(y);
     } else {
         sub_balance(owner, x);
         sub_balance(owner, y);
@@ -156,8 +161,8 @@ void token::outreserves(account_name owner, extended_symbol x, extended_symbol y
 
     SEND_INLINE_ACTION(*this, outreceipt, { _self, N(active) }, { owner, x_quantity, y_quantity });
     if (owner == system_account) {
-        sub_stats(owner, x_quantity);
-        sub_stats(owner, y_quantity);
+        sub_stats(x_quantity);
+        sub_stats(y_quantity);
     } else {
         add_balance(owner, x_quantity, owner);
         add_balance(owner, y_quantity, owner);

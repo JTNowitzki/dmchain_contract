@@ -1,5 +1,13 @@
+/**
+ *  @file
+ *  @copyright defined in fibos/LICENSE.txt
+ */
 #pragma once
 #include <string>
+
+struct eth_public_key {
+    uint8_t data[64];
+};
 
 uint8_t from_hex(char c)
 {
@@ -59,6 +67,11 @@ std::string sha256_to_hex(const checksum256& sha256)
     return to_hex((char*)sha256.hash, sizeof(sha256.hash));
 }
 
+std::string eth_key_to_hex(const eth_public_key& key)
+{
+    return to_hex((char*)key.data, sizeof(key.data));
+}
+
 uint64_t hexstring_to_int(std::string hexstring)
 {
     char* p;
@@ -115,6 +128,18 @@ std::string parse_number_to_string(T value)
     return reserve_result;
 }
 
+std::string convert_eth_address(const std::string& addr)
+{
+    std::string result(addr);
+    std::string prefix = "0x";
+    if (addr.compare(0, prefix.length(), prefix) == 0) {
+        result = result.substr(2);
+    }
+    transform(result.begin(), result.end(), result.begin(), ::tolower);
+
+    return result;
+}
+
 void assign_checksum256(checksum256& out, const checksum256& value)
 {
     for (int i = 0; i < 32; i++) {
@@ -160,6 +185,17 @@ bool is_hex(const char& ch)
         if (hex_base[i] == ch)
             return true;
     return false;
+}
+
+bool is_eth_addr_valid(const std::string& addr)
+{
+    if (addr.length() != 40)
+        return false;
+
+    for (int i = 0; i < addr.length(); i++)
+        if (!is_hex(addr[i]))
+            return false;
+    return true;
 }
 
 template <typename T>

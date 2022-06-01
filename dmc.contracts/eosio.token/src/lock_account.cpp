@@ -1,3 +1,8 @@
+/**
+ *  @file
+ *  @copyright defined in fibos/LICENSE.txt
+ */
+
 #include <eosio.token/eosio.token.hpp>
 
 namespace eosio {
@@ -11,6 +16,9 @@ void token::exlock(account_name owner, extended_asset quantity, time_point_sec e
     eosio_assert(memo.size() <= 256, "memo has more than 256 bytes");
 
     require_recipient(quantity.contract);
+
+    extended_symbol quantity_sym = quantity.get_extended_symbol();
+    eosio_assert(quantity_sym != pst_sym && quantity_sym != rsi_sym, "pst and rsi are not allowed to be locked");
 
     stats statstable(_self, quantity.contract);
     const auto& st = statstable.get(quantity.get_extended_symbol().name(), "token with symbol does not exist");
@@ -40,6 +48,10 @@ void token::exlocktrans(account_name from, account_name to, extended_asset quant
     eosio_assert(quantity.is_valid(), "invalid quantity when transfer lock tokens");
     eosio_assert(quantity.amount > 0, "must transfer lock tokens in positive quantity");
     eosio_assert(memo.size() <= 256, "memo has more than 256 bytes");
+
+    extended_symbol quantity_sym = quantity.get_extended_symbol();
+    eosio_assert(quantity_sym != pst_sym && quantity_sym != rsi_sym, "pst and rsi are not allowed to be locked");
+
     if (time_point_sec(now()) < expiration) {
         eosio_assert(expiration_to >= expiration, "expiration_to must longer than expiration");
     }

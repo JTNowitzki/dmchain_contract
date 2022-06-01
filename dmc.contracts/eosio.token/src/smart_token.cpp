@@ -1,3 +1,8 @@
+/**
+ *  @file
+ *  @copyright defined in fibos/LICENSE.txt
+ */
+
 #include <eosio.token/eosio.token.hpp>
 
 namespace eosio {
@@ -46,7 +51,7 @@ void token::exissue(account_name to, extended_asset quantity, string memo)
 
     eosio_assert(memo.size() <= 256, "memo has more than 256 bytes");
 
-    add_stats(issuer, quantity);
+    add_stats(quantity);
 
     add_balance(foundation, quantity, foundation);
 
@@ -55,7 +60,7 @@ void token::exissue(account_name to, extended_asset quantity, string memo)
     }
 
     if (quantity.get_extended_symbol() == pst_sym)
-        check_pst(to, quantity);
+        change_pst(to, quantity);
 }
 
 void token::extransfer(account_name from, account_name to, extended_asset quantity, string memo)
@@ -103,10 +108,10 @@ void token::exretire(account_name from, extended_asset quantity, string memo)
 
     sub_balance(from, quantity);
 
-    sub_stats(issuer, quantity);
+    sub_stats(quantity);
 
     if (quantity.get_extended_symbol() == pst_sym)
-        check_pst(from, -quantity);
+        change_pst(from, -quantity);
 }
 
 void token::exclose(account_name owner, extended_symbol symbol)
@@ -157,7 +162,7 @@ void token::add_balance(account_name owner, extended_asset value, account_name r
     }
 }
 
-void token::check_pst(account_name owner, extended_asset value)
+void token::change_pst(account_name owner, extended_asset value)
 {
     pststats pst_acnts(_self, _self);
     auto st = pst_acnts.find(owner);
@@ -179,9 +184,9 @@ void token::check_pst(account_name owner, extended_asset value)
         .send();
 }
 
-void token::add_stats(account_name issuer, extended_asset quantity)
+void token::add_stats(extended_asset quantity)
 {
-    stats statstable(_self, issuer);
+    stats statstable(_self, quantity.contract);
     const auto& st = statstable.get(quantity.symbol.name(), "token with symbol does not exist, create token before issue");
 
     eosio_assert(quantity.is_valid(), "issue invalid currency");
@@ -194,9 +199,9 @@ void token::add_stats(account_name issuer, extended_asset quantity)
     });
 }
 
-void token::sub_stats(account_name issuer, extended_asset quantity)
+void token::sub_stats(extended_asset quantity)
 {
-    stats statstable(_self, issuer);
+    stats statstable(_self, quantity.contract);
     const auto& st = statstable.get(quantity.symbol.name(), "token with symbol does not exist");
 
     statstable.modify(st, 0, [&](auto& s) {

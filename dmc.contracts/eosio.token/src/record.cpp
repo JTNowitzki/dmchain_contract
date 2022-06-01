@@ -1,3 +1,8 @@
+/**
+ *  @file
+ *  @copyright defined in fibos/LICENSE.txt
+ */
+
 #include <eosio.token/eosio.token.hpp>
 
 namespace eosio {
@@ -37,4 +42,25 @@ void token::uniswapsnap(account_name owner, extended_asset quantity)
     require_auth(_self);
     require_recipient(owner);
 }
+
+void token::billrec(account_name owner, extended_asset asset, uint64_t bill_id, uint8_t state)
+{
+    require_auth(_self);
+}
+
+void token::orderrec(account_name owner, account_name oppo, extended_asset sell, extended_asset buy, uint64_t bill_id, uint64_t order_id)
+{
+    require_auth(_self);
+}
+
+void token::incentiverec(account_name owner, extended_asset inc, uint64_t bill_id, uint64_t order_id, uint8_t type)
+{
+    require_auth(_self);
+}
+
+void token::orderclarec(account_name owner, extended_asset quantity, uint64_t bill_id, uint64_t order_id)
+{
+    require_auth(_self);
+}
+
 } /// namespace eosio

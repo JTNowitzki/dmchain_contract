@@ -1,3 +1,8 @@
+/**
+ *  @file
+ *  @copyright defined in fibos/LICENSE.txt
+ */
+
 #include <eosio.token/eosio.token.hpp>
 #include <eosio.token/utils.hpp>
 
@@ -10,6 +15,7 @@
 #include "./dmc.cpp"
 #include "./dmc_challenge.cpp"
 #include "./dmc_deliver.cpp"
+#include "./nft.cpp"
 
 namespace eosio {
 
@@ -29,8 +35,10 @@ EOSIO_ABI(eosio::token,
     //
     (addreserves)(outreserves)
     //
-    (stake)(unstake)(getincentive)(setabostats)(allocation)(order)
+    (bill)(unbill)(getincentive)(setabostats)(allocation)(order)
     //
-    (addmerkle)(submitproof)(replyproof)(challenge)
+    (billrec)(orderrec)(incentiverec)(orderclarec)
     //
-    (setdmcconfig)(claimorder)(reneworder)(cancelorder))
+    (setdmcconfig)
+
+)

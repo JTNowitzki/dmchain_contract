@@ -1,3 +1,7 @@
+/**
+ *  @file
+ *  @copyright defined in fibos/LICENSE.txt
+ */
 #pragma once
 
 #include <eosiolib/asset.hpp>
@@ -17,6 +21,7 @@ constexpr double static_weights = 10000.0;
 constexpr double uniswap_fee = 0.003;
 constexpr uint64_t uint64_max = ~uint64_t(0);
 constexpr uint64_t minimum_token_precision = 0;
+constexpr double miner_scale = 0.8;
 
 // for DMC
 static const account_name system_account = N(datamall);
@@ -24,10 +29,16 @@ static const extended_symbol pst_sym = extended_symbol(S(0, PST), system_account
 static const extended_symbol rsi_sym = extended_symbol(S(8, RSI), system_account);
 static const extended_symbol dmc_sym = extended_symbol(S(4, DMC), system_account);
 constexpr uint64_t default_dmc_claims_interval = 7 * 24 * 3600;
+// constexpr uint64_t default_dmc_claims_interval = 10 * 60;
 constexpr uint64_t default_dmc_stake_rate = 20;
 constexpr uint32_t identifying_code_mask = 0x3FFFFFF;
-// 0.00000041 rsi
-static const extended_asset per_sec_bonus = extended_asset(41, rsi_sym);
+
+constexpr uint64_t default_bill_dmc_claims_interval = 7 * 24 * 3600;
+// constexpr uint64_t default_bill_dmc_claims_interval = 10 * 60;
+constexpr uint64_t price_fluncuation_interval = 7 * 24 * 3600;
+constexpr uint64_t seconds_three_days = 3 * 24 * 3600;
+constexpr uint64_t default_benchmark_stake_rate = 200;
+constexpr uint64_t default_liquidation_stake_rate = 15;
 
 // for abo
 static const account_name abo_account = N(dmfoundation);
@@ -35,20 +46,42 @@ static const account_name abo_account = N(dmfoundation);
 // 业务类型
 enum e_order_state {
     OrderStateBegin = 0,
-    OrderStart = 1,
-    OrderSubmitMerkle = 2,
-    OrderConsistent = 3,
-    OrderInconsistent = 4,
-    OrderSubmitProof = 5,
-    OrderVerifyProof = 6,
-    OrderDenyProof = 7,
-    OrderMinerPay = 8,
-    OrderCancel = 9,
-    OrderEnd = 10,
+    OrderStateDeliver = 1,
+    OrderStatePreEnd = 2,
+    OrderStatePreCont = 3,
     OrderStateEnd,
+    OrderChallengeMask = (1 << 5),
+};
+
+enum nft_type_struct {
+    NftTypeBegin = 0,
+    ERC721 = 1,
+    ERC1155 = 2,
+    NftTypeEnd,
+};
+enum e_challenge_state {
+    ChallengeStateBegin = 0,
+    ChallengeStart = 1,
+    ChallengeSubmitMerkle = 2,
+    ChallengeConsistent = 3,
+    ChallengeInconsistent = 4,
+    ChallengeSubmitProof = 5,
+    ChallengeVerifyProof = 6,
+    ChallengeDenyProof = 7,
+    ChallengeMinerPay = 8,
+    ChallengeCancel = 9,
+    ChallengeStateEnd,
+};
+
+enum bill_state {
+    BILL = 0,
+    UNBILL = 1,
 };
 
 typedef uint8_t OrderState;
+typedef uint8_t ChallengeState;
+
+typedef uint8_t nft_type;
 
 class token : public contract {
 
@@ -57,6 +90,11 @@ public:
         : contract(self)
     {
     }
+
+    struct nft_batch_args {
+        uint64_t nft_id;
+        extended_asset quantity;
+    };
 
 public:
     /*! @brief ClassicToken 创建函数
@@ -202,20 +240,20 @@ public:
      @param asset 质押数量
      @param memo 备注
      */
-    void stake(account_name owner, extended_asset asset, double price, string memo);
+    void bill(account_name owner, extended_asset asset, double price, string memo);
 
     /*! @brief 取消质押PST
      @param owner 取消质押账户
      @param primary 取消的 id
      @param memo 备注
     */
-    void unstake(account_name owner, uint64_t stake_id, string memo);
+    void unbill(account_name owner, uint64_t bill_id, string memo);
 
     /*! @brief 领取激励
      @param owner 领取激励账户
      @param primary 领取的id
     */
-    void getincentive(account_name owner, uint64_t stake_id);
+    void getincentive(account_name owner, uint64_t bill_id);
 
     /*! @brief 设置 DMC 释放
      @param stage 释放阶段，目前1-11
@@ -235,27 +273,13 @@ public:
     /*! @brief 撮合挂单订单
      @param owner 交易者
      @param miner 挂单者
-     @param stake_id 挂单 id
+     @param bill_id 挂单 id
      @param asset 交易数量
      @param memo 附言
      */
-    void order(account_name owner, account_name miner, uint64_t stake_id, extended_asset asset, string memo);
-
-    void addmerkle(name sender, uint64_t order_id, checksum256 merkle_root);
-
-    void submitproof(name sender, uint64_t order_id, uint64_t data_id, checksum256 hash_data, std::string nonce);
-
-    void replyproof(name sender, uint64_t order_id, checksum256 reply_hash);
-
-    void challenge(name sender, uint64_t order_id, const std::vector<char>& data, std::vector<std::vector<checksum256>> cut_merkle);
+    void order(account_name owner, account_name miner, uint64_t bill_id, extended_asset asset, string memo);
 
     void setdmcconfig(account_name key, uint64_t value);
-
-    void claimorder(name payer, uint64_t order_id);
-
-    void reneworder(name sender, uint64_t order_id);
-
-    void cancelorder(name sender, uint64_t order_id);
 
 private:
     void uniswaporder(account_name owner, extended_asset quantity, extended_asset to, double price, account_name id, account_name rampay);
@@ -276,18 +300,82 @@ public:
     void uniswapsnap(account_name owner, extended_asset quantity);
 
 public:
+    void billrec(account_name owner, extended_asset asset, uint64_t bill_id, uint8_t state);
+    void orderrec(account_name owner, account_name oppo, extended_asset sell, extended_asset buy, uint64_t bill_id, uint64_t order_id);
+    void incentiverec(account_name owner, extended_asset inc, uint64_t bill_id, uint64_t order_id, uint8_t type);
+    void orderclarec(account_name owner, extended_asset quantity, uint64_t bill_id, uint64_t order_id);
+
+public:
     inline asset get_supply(symbol_type sym) const;
 
 private:
-    void check_pst(account_name owner, extended_asset value);
-    void add_stats(account_name issuer, extended_asset quantity);
-    void sub_stats(account_name issuer, extended_asset quantity);
+    void change_pst(account_name owner, extended_asset value);
+    void add_stats(extended_asset quantity);
+    void sub_stats(extended_asset quantity);
     string uint32_to_string(uint32_t value);
+    void trace_price_history(double price, uint64_t bill_id);
 
 private:
     uint64_t get_dmc_config(name key, uint64_t default_value);
 
 private:
+    struct nft_symbol_info {
+        uint64_t symbol_id;
+        extended_symbol nft_symbol;
+        std::string symbol_uri;
+        nft_type type;
+
+        uint64_t primary_key() const { return symbol_id; }
+
+        static uint128_t get_extended_symbol(extended_symbol symbol)
+        {
+            return ((uint128_t(symbol.name()) << 64) + symbol.contract);
+        }
+        uint128_t by_symbol() const { return get_extended_symbol(nft_symbol); }
+
+        EOSLIB_SERIALIZE(nft_symbol_info, (symbol_id)(nft_symbol)(symbol_uri)(type))
+    };
+
+    typedef eosio::multi_index<N(nftsymbols), nft_symbol_info,
+        indexed_by<N(extsymbol), const_mem_fun<nft_symbol_info, uint128_t, &nft_symbol_info::by_symbol>>>
+        nft_symbols;
+
+    struct nft_info {
+        uint64_t nft_id;
+        extended_asset supply;
+        std::string nft_uri;
+        std::string nft_name;
+        std::string extra_data;
+
+        uint64_t primary_key() const { return nft_id; }
+
+        EOSLIB_SERIALIZE(nft_info, (nft_id)(supply)(nft_uri)(nft_name)(extra_data))
+    };
+    typedef eosio::multi_index<N(nftinfo), nft_info> nft_infos;
+
+    struct nft_balance {
+        uint64_t primary;
+        name owner;
+        uint64_t nft_id;
+        extended_asset quantity;
+
+        uint64_t primary_key() const { return primary; }
+        uint64_t by_owner() const { return owner; }
+        uint64_t by_nft_id() const { return nft_id; }
+        static uint128_t get_owner_id(uint64_t owner, uint64_t nft_id)
+        {
+            return ((uint128_t(owner) << 64) + nft_id);
+        }
+        uint128_t by_owner_id() const { return get_owner_id(owner, nft_id); }
+
+        EOSLIB_SERIALIZE(nft_balance, (primary)(owner)(nft_id)(quantity))
+    };
+    typedef eosio::multi_index<N(nftbalance), nft_balance,
+        indexed_by<N(owner), const_mem_fun<nft_balance, uint64_t, &nft_balance::by_owner>>,
+        indexed_by<N(nftid), const_mem_fun<nft_balance, uint64_t, &nft_balance::by_nft_id>>,
+        indexed_by<N(ownerid), const_mem_fun<nft_balance, uint128_t, &nft_balance::by_owner_id>>>
+        nft_balances;
+
     struct account {
         uint64_t primary;
         extended_asset balance;
@@ -369,9 +457,9 @@ private:
     };
     typedef eosio::multi_index<N(swappool), market_pool> swap_pool;
 
-    struct stake_record {
+    struct bill_record {
         uint64_t primary;
-        uint64_t stake_id;
+        uint64_t bill_id;
         account_name owner;
         extended_asset matched;
         extended_asset unmatched;
@@ -382,20 +470,21 @@ private:
         uint64_t primary_key() const { return primary; }
         uint64_t get_lower() const { return price; }
         uint64_t get_time() const { return uint64_t(updated_at.sec_since_epoch()); };
-        uint64_t get_stake_id() const { return stake_id; }
-        EOSLIB_SERIALIZE(stake_record, (primary)(stake_id)(owner)(matched)(unmatched)(price)(created_at)(updated_at))
+        uint64_t get_stake_id() const { return bill_id; }
+        EOSLIB_SERIALIZE(bill_record, (primary)(bill_id)(owner)(matched)(unmatched)(price)(created_at)(updated_at))
     };
-    typedef eosio::multi_index<N(stakerec), stake_record,
-        indexed_by<N(bylowerprice), const_mem_fun<stake_record, uint64_t, &stake_record::get_lower>>,
-        indexed_by<N(bytime), const_mem_fun<stake_record, uint64_t, &stake_record::get_time>>,
-        indexed_by<N(byid), const_mem_fun<stake_record, uint64_t, &stake_record::get_stake_id>>>
-        stake_stats;
+    typedef eosio::multi_index<N(stakerec), bill_record,
+        indexed_by<N(bylowerprice), const_mem_fun<bill_record, uint64_t, &bill_record::get_lower>>,
+        indexed_by<N(bytime), const_mem_fun<bill_record, uint64_t, &bill_record::get_time>>,
+        indexed_by<N(byid), const_mem_fun<bill_record, uint64_t, &bill_record::get_stake_id>>>
+        bill_stats;
 
     struct pst_stats {
         account_name owner;
         extended_asset amount;
 
         uint64_t primary_key() const { return owner; }
+        uint64_t by_amount() const { return -amount.amount; }
         EOSLIB_SERIALIZE(pst_stats, (owner)(amount))
     };
     typedef eosio::multi_index<N(pststats), pst_stats> pststats;
@@ -423,6 +512,15 @@ private:
         string memo;
     };
 
+    struct order_id_args {
+        account_name owner;
+        account_name miner;
+        uint64_t bill_id;
+        extended_asset asset;
+        string memo;
+        time_point_sec now;
+    };
+
     struct dmc_config {
         account_name key;
         uint64_t value;
@@ -438,18 +536,20 @@ private:
         uint64_t order_id; // 唯一性主键
         account_name user; // 购买者
         account_name miner; // 挂单者
-        uint64_t stake_id;
+        uint64_t bill_id;
         extended_asset user_pledge; // dmc
         extended_asset miner_pledge; // pst
+        extended_asset price; // dmc per price
+        extended_asset settlement_pledge; // dmc
+        extended_asset lock_pledge; // dmc
         OrderState state;
         time_point_sec create_date;
-        time_point_sec end_date;
         time_point_sec claim_date;
 
         uint64_t primary_key() const { return order_id; }
         uint64_t get_user() const { return user; }
         uint64_t get_miner() const { return miner; }
-        EOSLIB_SERIALIZE(dmc_order, (order_id)(user)(miner)(stake_id)(user_pledge)(miner_pledge)(state)(create_date)(end_date)(claim_date))
+        EOSLIB_SERIALIZE(dmc_order, (order_id)(user)(miner)(bill_id)(user_pledge)(miner_pledge)(price)(settlement_pledge)(lock_pledge)(state)(create_date)(claim_date))
     };
     typedef eosio::multi_index<N(dmcorder), dmc_order,
         indexed_by<N(user), const_mem_fun<dmc_order, uint64_t, &dmc_order::get_user>>,
@@ -464,11 +564,68 @@ private:
         checksum256 hash_data;
         uint64_t challenge_times;
         std::string nonce;
+        ChallengeState state;
 
         uint64_t primary_key() const { return order_id; }
-        EOSLIB_SERIALIZE(dmc_challenge, (order_id)(merkle_root)(data_id)(hash_data)(challenge_times)(nonce))
+        EOSLIB_SERIALIZE(dmc_challenge, (order_id)(merkle_root)(data_id)(hash_data)(challenge_times)(nonce)(state))
     };
     typedef eosio::multi_index<N(dmchallenge), dmc_challenge> dmc_challenges;
+
+    struct limited_partner {
+        account_name owner;
+        extended_asset staked;
+        time_point_sec updated_at;
+    };
+
+    // pst 铸造表
+    struct dmc_maker {
+        account_name miner;
+        double current_rate; // r
+        double miner_rate;
+        double total_weight;
+        extended_asset total_staked;
+
+        uint64_t primary_key() const { return miner; }
+        double by_rate() const { return current_rate; }
+        EOSLIB_SERIALIZE(dmc_maker, (miner)(current_rate)(miner_rate)(total_weight)(total_staked))
+    };
+    typedef eosio::multi_index<N(dmcmaker), dmc_maker,
+        indexed_by<N(byrate), const_mem_fun<dmc_maker, double, &dmc_maker::by_rate>>>
+        dmc_makers;
+
+    struct maker_pool {
+        account_name owner;
+        double weight;
+
+        uint64_t primary_key() const { return owner; };
+        EOSLIB_SERIALIZE(maker_pool, (owner)(weight))
+    };
+    typedef eosio::multi_index<N(makerpool), maker_pool> dmc_maker_pool;
+    struct price_history {
+        uint64_t primary;
+        uint64_t bill_id;
+        double price;
+        time_point_sec created_at;
+
+        uint64_t primary_key() const { return primary; }
+        double by_prices() const { return -price; }
+        uint64_t get_time() const { return uint64_t(created_at.sec_since_epoch()); };
+        EOSLIB_SERIALIZE(price_history, (primary)(bill_id)(price)(created_at))
+    };
+    typedef eosio::multi_index<N(dmcprice), price_history,
+        indexed_by<N(byprice), const_mem_fun<price_history, double, &price_history::by_prices>>,
+        indexed_by<N(bytime), const_mem_fun<price_history, uint64_t, &price_history::get_time>>>
+        price_table;
+
+    struct price_avg {
+        uint64_t primary = 0;
+        double total = 0;
+        uint64_t count = 0;
+        double avg = 0;
+        uint64_t primary_key() const { return primary; }
+        EOSLIB_SERIALIZE(price_avg, (primary)(total)(count)(avg))
+    };
+    typedef eosio::multi_index<N(priceavg), price_avg> avg_table;
 
 private:
     inline static account_name get_foundation(account_name issuer)
@@ -486,7 +643,9 @@ private:
     extended_asset get_balance(extended_asset quantity, account_name name);
 
 private:
-    void calbonus(account_name owner, uint64_t primary, bool unstake, account_name ram_payer);
+    void calbonus(account_name owner, uint64_t primary, bool unbill, account_name ram_payer);
+    double cal_makerd_pst(extended_asset dmc_asset);
+    double cal_current_rate(extended_asset dmc_asset, account_name owner);
 };
 
 asset token::get_supply(symbol_type sym) const

@@ -7,8 +7,14 @@
       "new_type_name": "OrderState",
       "type": "uint8"
    },{
+      "new_type_name": "ChallengeState",
+      "type": "uint8"
+   },{
       "new_type_name": "checksum_array",
       "type": "checksum256[]"
+   },{
+      "new_type_name": "nft_type",
+      "type": "uint8"
    }],
   "structs": [{
       "name": "extended_symbol",
@@ -263,11 +269,11 @@
         {"name":"weights","type":"float64"}
       ]
     },{
-      "name": "stake_record",
+      "name": "bill_record",
       "base": "",
       "fields": [
         {"name":"primary", "type":"uint64"},
-        {"name":"stake_id", "type":"uint64"},
+        {"name":"bill_id", "type":"uint64"},
         {"name":"owner", "type":"account_name"},
         {"name":"matched","type":"extended_asset"},
         {"name":"unmatched","type":"extended_asset"},
@@ -276,7 +282,7 @@
         {"name":"updated_at","type":"time_point_sec"}
       ]
     },{
-      "name": "stake",
+      "name": "bill",
       "base": "",
       "fields": [
         {"name":"owner","type":"account_name"},
@@ -285,11 +291,11 @@
         {"name":"memo","type":"string"}
       ]
     },{
-      "name": "unstake",
+      "name": "unbill",
       "base": "",
       "fields": [
         {"name":"owner","type":"account_name"},
-        {"name":"stake_id","type":"uint64"},
+        {"name":"bill_id","type":"uint64"},
         {"name":"memo","type":"string"}
       ]
     },{
@@ -297,7 +303,7 @@
       "base": "",
       "fields": [
         {"name":"owner","type":"account_name"},
-        {"name":"stake_id","type":"uint64"}
+        {"name":"bill_id","type":"uint64"}
       ]
     }, {
       "name": "pst_stats",
@@ -350,6 +356,7 @@
       "fields": [
         {"name": "sender","type": "name"},
         {"name": "order_id","type": "uint64"},
+        {"name": "data_id_str","type": "string"},
         {"name": "data","type": "bytes"},
         {"name": "cut_merkle","type": "checksum_array[]"}
       ]
@@ -362,7 +369,8 @@
         {"name": "data_id","type": "uint64"},
         {"name": "hash_data","type": "checksum256"},
         {"name": "challenge_times","type": "uint64"},
-        {"name": "nonce","type": "string"}
+        {"name": "nonce","type": "string"},
+        {"name": "state","type": "ChallengeState"}
       ]
     },{          
       "name": "dmc_order",
@@ -371,12 +379,14 @@
         {"name": "order_id","type": "uint64"},
         {"name": "user","type": "account_name"},
         {"name": "miner","type": "account_name"},
-        {"name": "stake_id","type": "uint64"},
+        {"name": "bill_id","type": "uint64"},
         {"name": "user_pledge","type": "extended_asset"},
         {"name": "miner_pledge","type": "extended_asset"},
+        {"name": "price","type": "extended_asset"},
+        {"name": "settlement_pledge","type": "extended_asset"},
+        {"name": "lock_pledge","type": "extended_asset"},
         {"name": "state","type": "OrderState"},
         {"name": "create_date","type": "time_point_sec"},
-        {"name": "update_date","type": "time_point_sec"},
         {"name": "claim_date","type": "time_point_sec"}
       ]
     },{
@@ -404,7 +414,7 @@
       "fields": [
         {"name": "owner","type": "account_name"},
         {"name": "miner","type": "account_name"},
-        {"name": "stake_id","type": "uint64"},
+        {"name": "bill_id","type": "uint64"},
         {"name": "asset","type": "extended_asset"},
         {"name": "memo","type": "string"}
       ]
@@ -430,18 +440,355 @@
         {"name": "order_id","type": "uint64"}
       ]
     },{
-      "name": "reneworder",
+      "name": "addordasset",
       "base": "",
       "fields": [
         {"name": "sender","type": "account_name"},
+        {"name": "order_id","type": "uint64"},
+        {"name": "quantity","type": "extended_asset"}
+      ]
+    },{
+      "name": "subordasset",
+      "base": "",
+      "fields": [
+        {"name": "sender","type": "account_name"},
+        {"name": "order_id","type": "uint64"},
+        {"name": "quantity","type": "extended_asset"}
+      ]
+    },{
+      "name": "dmc_maker",
+      "base": "",
+      "fields": [
+        {"name": "miner","type": "account_name"},
+        {"name": "current_rate","type": "float64"},
+        {"name": "miner_rate","type": "float64" },
+        {"name": "total_weight","type": "float64" },
+        {"name": "total_staked", "type": "extended_asset"}
+      ]
+    },{
+      "name": "increase",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "asset","type": "extended_asset"},
+        {"name": "miner","type": "account_name"}
+      ]
+    },{
+      "name": "redemption",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "rate","type": "float64"},
+        {"name": "miner","type": "account_name"}
+      ]
+    },{
+      "name": "mint",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "asset","type": "extended_asset"}
+      ]
+    },{
+      "name": "setmakerrate",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "double","type": "float64"}
+      ]
+    },{
+      "name": "billrec",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "asset","type": "extended_asset"},
+        {"name": "bill_id","type": "uint64"},
+        {"name": "state","type": "uint8"}
+      ]
+    },{
+      "name": "orderrec",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "oppo","type": "account_name"},
+        {"name": "sell","type": "extended_asset"},
+        {"name": "buy","type": "extended_asset"},
+        {"name": "bill_id","type": "uint64"},
         {"name": "order_id","type": "uint64"}
       ]
-    }, {
-      "name": "cancelorder",
+    },{
+      "name": "incentiverec",
       "base": "",
       "fields": [
-        {"name": "sender","type": "account_name"},
+        {"name": "owner","type": "account_name"},
+        {"name": "inc","type": "extended_asset"},
+        {"name": "bill_id","type": "uint64"},
+        {"name": "order_id","type": "uint64"},
+        {"name": "type","type": "uint8"}
+      ]
+    },{
+      "name": "orderclarec",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "quantity","type": "extended_asset"},
+        {"name": "bill_id","type": "uint64"},
         {"name": "order_id","type": "uint64"}
+      ]
+    },{
+      "name": "price_history",
+      "base": "",
+      "fields": [
+        {"name": "primary","type": "uint64"},
+        {"name": "bill_id","type": "uint64"},
+        {"name": "price","type": "float64"},
+        {"name": "created_at","type": "time_point_sec"}
+      ]
+    },{
+      "name": "price_avg",
+      "base": "",
+      "fields": [
+        {"name": "primary","type": "uint64"},
+        {"name": "total","type": "float64"},
+        {"name": "count","type": "uint64"},
+        {"name": "avg","type": "float64"}
+      ]
+    },{
+      "name": "clean",
+      "base": "",
+      "fields": [
+        {"name": "memo","type": "string"}
+      ]
+    },{
+      "name": "burnbatch",
+      "base": "",
+      "fields": [
+        {
+          "name": "from",
+          "type": "name"
+        },
+        {
+          "name": "batch_args",
+          "type": "nft_batch_args[]"
+        }
+      ]
+    },{
+      "name": "nft_balance",
+      "base": "",
+      "fields": [
+        {
+          "name": "primary",
+          "type": "uint64"
+        },
+        {
+          "name": "owner",
+          "type": "name"
+        },
+        {
+          "name": "nft_id",
+          "type": "uint64"
+        },
+        {
+          "name": "quantity",
+          "type": "extended_asset"
+        }
+      ]
+    },
+    {
+      "name": "nft_batch_args",
+      "base": "",
+      "fields": [
+        {
+          "name": "nft_id",
+          "type": "uint64"
+        },
+        {
+          "name": "quantity",
+          "type": "extended_asset"
+        }
+      ]
+    },
+    {
+      "name": "nft_info",
+      "base": "",
+      "fields": [
+        {
+          "name": "nft_id",
+          "type": "uint64"
+        },
+        {
+          "name": "supply",
+          "type": "extended_asset"
+        },
+        {
+          "name": "nft_uri",
+          "type": "string"
+        },
+        {
+          "name": "nft_name",
+          "type": "string"
+        },
+        {
+          "name": "extra_data",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "nft_symbol_info",
+      "base": "",
+      "fields": [
+        {
+          "name": "symbol_id",
+          "type": "uint64"
+        },
+        {
+          "name": "nft_symbol",
+          "type": "extended_symbol"
+        },
+        {
+          "name": "symbol_uri",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "nft_type"
+        }
+      ]
+    },
+    {
+      "name": "nftburn",
+      "base": "",
+      "fields": [
+        {
+          "name": "from",
+          "type": "name"
+        },
+        {
+          "name": "nft_id",
+          "type": "uint64"
+        },
+        {
+          "name": "quantity",
+          "type": "extended_asset"
+        }
+      ]
+    },
+    {
+      "name": "nftcreate",
+      "base": "",
+      "fields": [
+        {
+          "name": "to",
+          "type": "name"
+        },
+        {
+          "name": "nft_uri",
+          "type": "string"
+        },
+        {
+          "name": "nft_name",
+          "type": "string"
+        },
+        {
+          "name": "extra_data",
+          "type": "string"
+        },
+        {
+          "name": "quantity",
+          "type": "extended_asset"
+        }
+      ]
+    },
+    {
+      "name": "nftcreatesym",
+      "base": "",
+      "fields": [
+        {
+          "name": "nft_symbol",
+          "type": "extended_symbol"
+        },
+        {
+          "name": "symbol_uri",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "nft_type"
+        }
+      ]
+    },
+    {
+      "name": "nftissue",
+      "base": "",
+      "fields": [
+        {
+          "name": "to",
+          "type": "name"
+        },
+        {
+          "name": "nft_id",
+          "type": "uint64"
+        },
+        {
+          "name": "quantity",
+          "type": "extended_asset"
+        }
+      ]
+    },
+    {
+      "name": "nfttransfer",
+      "base": "",
+      "fields": [
+        {
+          "name": "from",
+          "type": "name"
+        },
+        {
+          "name": "to",
+          "type": "name"
+        },
+        {
+          "name": "nft_id",
+          "type": "uint64"
+        },
+        {
+          "name": "quantity",
+          "type": "extended_asset"
+        },
+        {
+          "name":"memo",
+          "type":"string"
+        }
+      ]
+    },
+    {
+      "name": "nfttransferb",
+      "base": "",
+      "fields": [
+        {
+          "name": "from",
+          "type": "name"
+        },
+        {
+          "name": "to",
+          "type": "name"
+        },
+        {
+          "name": "batch_args",
+          "type": "nft_batch_args[]"
+        },
+        {
+          "name":"memo",
+          "type":"string"
+        }
+      ]
+    },
+    {
+      "name": "maker_pool",
+      "base": "",
+      "fields": [
+        {"name": "owner","type": "account_name"},
+        {"name": "weight","type": "float64"}
       ]
     }
   ],
@@ -542,12 +889,12 @@
       "type": "uniswapsnap",
       "ricardian_contract": ""
     },{
-      "name": "stake",
-      "type": "stake",
+      "name": "bill",
+      "type": "bill",
       "ricardian_contract": ""
     },{
-      "name": "unstake",
-      "type": "unstake",
+      "name": "unbill",
+      "type": "unbill",
       "ricardian_contract": ""
     },{
       "name": "getincentive",
@@ -562,22 +909,6 @@
       "type": "allocation",
       "ricardian_contract": ""
     },{
-      "name": "addmerkle",
-      "type": "addmerkle",
-      "ricardian_contract": ""
-    },{
-      "name": "replyproof",
-      "type": "replyproof",
-      "ricardian_contract": ""
-    },{
-      "name": "challenge",
-      "type": "challenge",
-      "ricardian_contract": ""
-    },{
-      "name": "submitproof",
-      "type": "submitproof",
-      "ricardian_contract": ""
-    },{
       "name": "order",
       "type": "order",
       "ricardian_contract": ""
@@ -586,16 +917,20 @@
       "type": "setdmcconfig",
       "ricardian_contract": ""
     },{
-      "name": "claimorder",
-      "type": "claimorder",
+      "name": "billrec",
+      "type": "billrec",
       "ricardian_contract": ""
     },{
-      "name": "reneworder",
-      "type": "reneworder",
+      "name": "orderrec",
+      "type": "orderrec",
       "ricardian_contract": ""
     },{
-      "name": "cancelorder",
-      "type": "cancelorder",
+      "name": "incentiverec",
+      "type": "incentiverec",
+      "ricardian_contract": ""
+    },{
+      "name": "orderclarec",
+      "type": "orderclarec",
       "ricardian_contract": ""
     }
   ],
@@ -631,7 +966,7 @@
       "key_types" : ["uint64"]
     },{
       "name": "stakerec",
-      "type": "stake_record",
+      "type": "bill_record",
       "index_type": "i64",
       "key_names" : ["primary"],
       "key_types" : ["uint64"]
@@ -664,6 +999,48 @@
       "type": "dmc_config",
       "index_type": "i64",
       "key_names": ["key"],
+      "key_types": ["uint64"]
+    },{
+      "name": "dmcmaker",
+      "type": "dmc_maker",
+      "index_type": "i64",
+      "key_names": ["primary"],
+      "key_types": ["uint64"]
+    },{
+      "name": "dmcprice",
+      "type": "price_history",
+      "index_type": "i64",
+      "key_names": ["primary"],
+      "key_types": ["uint64"]
+    },{
+      "name": "priceavg",
+      "type": "price_avg",
+      "index_type": "i64",
+      "key_names": ["primary"],
+      "key_types": ["uint64"]
+    },{
+      "name": "nftbalance",
+      "type": "nft_balance",
+      "index_type": "i64",
+      "key_names": ["primary"],
+      "key_types": ["uint64"]
+    },{
+      "name": "nftinfo",
+      "type": "nft_info",
+      "index_type": "i64",
+      "key_names": ["nft_id"],
+      "key_types": ["uint64"]
+    },{
+      "name": "nftsymbols",
+      "type": "nft_symbol_info",
+      "index_type": "i64",
+      "key_names": ["symbol_id"],
+      "key_types": ["uint64"]
+    },{
+      "name": "makerpool",
+      "type": "maker_pool",
+      "index_type": "i64",
+      "key_names": ["owner"],
       "key_types": ["uint64"]
     }
   ],
